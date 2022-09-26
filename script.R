@@ -16,3 +16,4 @@ dat %>%
   group_by(variable, leg) %>% 
   colMeans()
  
+

@@ -9,6 +9,7 @@ editor_options:
 ```{r setup, include = FALSE}
 library(tidyverse)
 library(readxl)
+library(flextable)
 data <- read_excel("data/humac-data.xlsx") %>% 
   mutate(pt.120 = as.numeric(pt.120),
          ttp.120 = as.numeric(ttp.120),
@@ -23,21 +24,58 @@ data <- read_excel("data/humac-data.xlsx") %>%
 ```
 
 
-```{r reliability}
+```{r}
+#| label: tbl-reliability
+#| echo: false
+#| message: false
+#| warning: false
+#| tbl-cap: "Reliability of knee-extension tests"
+
+
 data %>% 
-  pivot_longer(names_to = "variable",
-               values_to = "values",
-               cols = pt.60:ttp.iso) %>% 
+  pivot_longer(cols = pt.60:ttp.iso,
+               names_to = "variable",
+               values_to = "values") %>% 
+  mutate(variable = gsub("pt.", "pt_", variable),
+         variable = gsub("ttp.", "ttp_", variable)) %>% 
+  pivot_wider(names_from = variable,
+              values_from = values) %>%
+  pivot_longer(cols = pt_60:ttp_iso,
+               names_to = c("variable", "speed"),
+               names_sep = "_",
+               values_to = "value") %>%
   pivot_wider(names_from = timepoint,
-              values_from = values) %>% 
+              values_from = value) %>%
   mutate(diff = post - pre) %>% 
-  group_by(leg, variable) %>% 
+  group_by(leg, variable, speed) %>% 
   summarise(m = mean(c(pre, post), na.rm = T),
             sd = sd(diff, na.rm = T),
             te = sd / sqrt(2),
             cv = 100 * (te / m),
-            L = qt(0.975, 4) * sd) %>% 
-  print()
+            L = qt(0.975, 4) * sd) %>%
+  mutate(te_cv =  paste0(signif(te, 2), 
+                         " (",
+                         signif(cv, 2), 
+                         ")"),
+         leg_var = paste(leg, variable, sep = "_")) %>% 
+  ungroup() %>%
+  select(speed, te_cv, leg_var) %>%
+  pivot_wider(names_from = leg_var,
+              values_from = te_cv) %>% 
+  mutate(speed = factor(speed, levels = c("60", "120", "240", "360", "480", "iso"),
+                        labels = c("60 (deg/s)", "120 (deg/s)", "240 (deg/s)", "360 (deg/s)", "480 (deg/s)", "isometric (60 deg)"))) %>% 
+  arrange(speed) %>% 
+  flextable() %>% 
+  set_header_labels(speed = "",
+                    L_pt = "Peak torque\n (N/m)",
+                    L_ttp = "Time to peak torque\n (seconds)",
+                    R_pt = "Peak torque\n (N/m)",
+                    R_ttp = "Time to peak torque\n (seconds)") %>% 
+  add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right Leg")) %>% 
+  merge_at(part = "header", i = 1, j = 2:3) %>% 
+  merge_at(part = "header", i = 1, j = 4:5) %>% 
+  add_footer_row(values = "All values are presented as typical error (coefficient of variation) based on differences from pre- to posttesting", colwidths = 5) %>% 
+  autofit() 
   
 ```
 
