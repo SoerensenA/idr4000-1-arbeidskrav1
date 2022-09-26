@@ -7,9 +7,12 @@ editor_options:
 
 
 ```{r setup, include = FALSE}
+install.packages("readxl")
 library(tidyverse)
 library(readxl)
-data <- read_excel("data/humac-data.xlsx") %>% 
+library(gt)
+library(gt_tbl)
+data <- read_excel("data/humac-data.xlsx") %>%
   mutate(pt.120 = as.numeric(pt.120),
          ttp.120 = as.numeric(ttp.120),
          pt.240 = as.numeric(pt.240),
@@ -20,6 +23,26 @@ data <- read_excel("data/humac-data.xlsx") %>%
          ttp.480 = as.numeric(ttp.480),
          pt.iso = as.numeric(pt.iso),
          ttp.iso = as.numeric(ttp.iso))
+```
+
+
+```{r descriptive}
+data %>% 
+  pivot_longer(names_to = "Test",
+               values_to = "values",
+               cols = pt.60:ttp.iso) %>% 
+  pivot_wider(names_from = timepoint,
+              values_from = values) %>% 
+  mutate(diff = post - pre) %>%
+  group_by(Test, leg) %>% 
+  summarise(mean = mean(pre, na.rm = T),
+            min = min(pre, na.rm = T),
+            max = max(pre, na.rm = T),
+            sd = sd(pre, na.rm = T)) %>% gt()
+  
+  
+  
+
 ```
 
 
