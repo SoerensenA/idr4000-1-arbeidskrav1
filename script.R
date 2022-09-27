@@ -27,4 +27,8 @@ dat %>%
   group_by(variable, leg) %>% 
   colMeans()
  
+<<<<<<< HEAD
 >>>>>>> 97088a4c7c04bee840657d10a1a5669b2af90e1e
+=======
+
+>>>>>>> e2986a65d68ead82e23cdef65290acd098e723a3
