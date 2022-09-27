@@ -6,6 +6,7 @@ editor_options:
 ---
 
 
+
 ```{r}
 #| label: setup
 #| include: false
@@ -46,12 +47,40 @@ data %>%
                cols = pt.60:ttp.iso) %>% 
   pivot_wider(names_from = timepoint,
               values_from = values) %>% 
-  mutate(diff = post - pre) %>%
-  group_by(Test, leg) %>% 
+  group_by(Test) %>%
   summarise(mean = mean(pre, na.rm = T),
             min = min(pre, na.rm = T),
             max = max(pre, na.rm = T),
-            sd = sd(pre, na.rm = T)) %>% gt()
+            sd = sd(pre, na.rm = T)) %>%
+  ungroup() %>%
+  separate(Test, into = c("test", "speed")) %>%
+  pivot_wider(names_from = test, values_from = mean:sd) %>%
+  select(speed, mean_pt, min_pt, max_pt, sd_pt, 
+         mean_ttp, min_ttp, max_ttp, sd_ttp) %>%
+  mutate(speed = factor(speed, levels = c("60", "120", "240", "360", "480", "iso"),
+                        labels = c("60 (deg/s)", 
+                                   "120 (deg/s)", 
+                                   "240 (deg/s)", 
+                                   "360 (deg/s)", 
+                                   "480 (deg/s)", 
+                                   "Isometric (60 deg)"))) %>%
+  arrange(speed) %>% 
+   gt() %>%
+  tab_spanner(columns = mean_pt:sd_pt, label = "Peak Torque\n (N/m)") %>%
+  tab_spanner(columns = mean_ttp:sd_ttp, label = "Time To Peak Torque\n (seconds)") %>%
+  fmt_number(columns = mean_pt:sd_pt, decimals = 1) %>%
+  fmt_number(columns = mean_ttp:sd_ttp, decimals = 2) %>%
+  cols_label(speed = "Protocol",
+             mean_pt = "Mean",
+             min_pt = "Min",
+             max_pt = "Max",
+             sd_pt = "SD",
+             mean_ttp = "Mean",
+             min_ttp = "Min",
+             max_ttp = "Max",
+             sd_ttp = "SD")
+  
+  
 
 ```
 
@@ -65,62 +94,59 @@ data %>%
 #| warning: false
 #| tbl-cap: "Reliability of knee-extension tests"
 
+
 data %>% 
   pivot_longer(cols = pt.60:ttp.iso,
-               names_to = "variable",
-               values_to = "values") %>% # transform the dataset into long format
-  mutate(variable = gsub("pt.", "pt_", variable),
-         variable = gsub("ttp.", "ttp_", variable)) %>% # separate variable strings with "_" instead of "."
-  pivot_wider(names_from = variable,
-              values_from = values) %>% # transform back to wide format with the new separator 
-  pivot_longer(cols = pt_60:ttp_iso,
-               names_to = c("variable", "speed"),  # use the new separator to split the "variable" 
-               names_sep = "_",                    # into "variable" and "speed" and transform into long format
-               values_to = "value") %>%
+               names_to = c("variable","speed"),
+               values_to = "value", 
+               names_sep = "[.]") %>% # transform the dataset into long format
   pivot_wider(names_from = timepoint,
               values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
   mutate(diff = post - pre) %>% # make a new column named "diff" with differences scores
-  group_by(leg, variable, speed) %>% # make a grouped dataset based on leg, variable and speed
+  group_by(variable, speed) %>% # make a grouped dataset based on leg, variable and speed
   summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
             sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
             te = sd / sqrt(2), # calculate the typical error of the diff scores
             cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
-            L = qt(0.975, 4) * sd) %>% # calculate the limits of agreement for diff scores
-  mutate(te_cv =  paste0(signif(te, 2), # merge te and cv into one cell
-                         " (",
-                         signif(cv, 2), 
-                         "%)"), # merge leg and variable separated with "_"
-         leg_var = paste(leg, variable, sep = "_")) %>% 
+            L = qt(0.975, 4) * sd) %>%  # calculate the limits of agreement for diff scores
   ungroup() %>% # ungroup the dataset
-  select(speed, te_cv, leg_var) %>% # select variables of interest
-  pivot_wider(names_from = leg_var,
-              values_from = te_cv) %>% # transform the dataset into wide format 
-  mutate(speed = factor(speed, levels = c("60", # make the vector "speed" into a factor and set new levels
+  select(-sd) %>% 
+  pivot_wider(names_from = variable, 
+              values_from = m:L) %>% 
+  select(speed, m_pt, te_pt, cv_pt, L_pt,
+         m_ttp, te_ttp, cv_ttp, L_ttp) %>% 
+  mutate(speed = factor(speed, levels = c("60",
                                           "120", 
                                           "240", 
                                           "360", 
                                           "480", 
-                                          "iso"), 
-                        labels = c("60 (deg/s)", # give the variables more descriptive labels
+                                          "iso"),
+                        labels = c("60 (deg/s)", 
                                    "120 (deg/s)", 
                                    "240 (deg/s)", 
                                    "360 (deg/s)", 
                                    "480 (deg/s)", 
-                                   "Isometric (60 deg)"))) %>% 
-  arrange(speed) %>% # arrange the dataset based on the new levels of the "speed" vector
-  flextable() %>% # transform into a flextable to allow further modifications
-  set_header_labels(speed = "Protocol",
-                    L_pt = "Peak torque\n (N/m)",
-                    L_ttp = "Time to peak torque\n (seconds)",
-                    R_pt = "Peak torque\n (N/m)",
-                    R_ttp = "Time to peak torque\n (seconds)") %>% # rename header labels
-  add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right Leg")) %>% # add a new header row 
-  merge_at(part = "header", i = 1, j = 2:3) %>% # merge left leg together in the new header row
-  merge_at(part = "header", i = 1, j = 4:5) %>% # merge left leg together in the new header row
-  add_footer_row(values = "All values are presented as typical error (coefficient of variation) based on differences from pre- to posttesting", 
-                 colwidths = 5) %>% # add a footnote to describe what the values show
-  autofit() # use autofit() to tidy up the flextable 
-  
+                                   "Isometric (60 deg)"))) %>%
+  arrange(speed) %>%
+  gt() %>% 
+  tab_spanner(columns = m_pt:L_pt, label = "Peak Torque\n (N/m)") %>%
+  tab_spanner(columns = m_ttp:L_ttp, label = "Time To Peak Torque\n (seconds)") %>% 
+  fmt_number(columns = m_pt:L_pt, decimals = 1) %>% 
+  fmt_number(columns = m_ttp:L_ttp, decimals = 2) %>% 
+  cols_label(speed = "Protocol",
+             m_pt = "M",
+             te_pt = "TE",
+             cv_pt = "CV",
+             L_pt = "LoA",
+             m_ttp = "M",
+             te_ttp = "TE",
+             cv_ttp = "CV",
+             L_ttp = "LoA") %>% 
+  tab_footnote(footnote = "Abbriviations: M, mean; TE, typical error; CV, coefficient of variations; LoA, limits of agreement")
+   
 ```
+
+
+
 
 
