@@ -14,6 +14,8 @@ editor_options:
 library(tidyverse)
 library(readxl)
 library(flextable)
+library(gt)
+
 
 # importing the dataset with changes to the column types
 data <- read_excel("data/humac-data.xlsx") %>% 
@@ -30,13 +32,38 @@ data <- read_excel("data/humac-data.xlsx") %>%
 ```
 
 
+
+```{r}
+#| label: tbl-descriptive
+#| echo: false
+#| message: false
+#| warning: false
+#| tbl-cap: "Descriptive data from participants"
+
+data %>% 
+  pivot_longer(names_to = "Test",
+               values_to = "values",
+               cols = pt.60:ttp.iso) %>% 
+  pivot_wider(names_from = timepoint,
+              values_from = values) %>% 
+  mutate(diff = post - pre) %>%
+  group_by(Test, leg) %>% 
+  summarise(mean = mean(pre, na.rm = T),
+            min = min(pre, na.rm = T),
+            max = max(pre, na.rm = T),
+            sd = sd(pre, na.rm = T)) %>% gt()
+
+```
+
+
+
+
 ```{r}
 #| label: tbl-reliability
 #| echo: false
 #| message: false
 #| warning: false
 #| tbl-cap: "Reliability of knee-extension tests"
-
 
 data %>% 
   pivot_longer(cols = pt.60:ttp.iso,
