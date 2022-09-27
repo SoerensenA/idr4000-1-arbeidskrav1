@@ -109,7 +109,7 @@ data %>%
                                    "Isometric (60 deg)"))) %>% 
   arrange(speed) %>% # arrange the dataset based on the new levels of the "speed" vector
   flextable() %>% # transform into a flextable to allow further modifications
-  set_header_labels(speed = "",
+  set_header_labels(speed = "Protocol",
                     L_pt = "Peak torque\n (N/m)",
                     L_ttp = "Time to peak torque\n (seconds)",
                     R_pt = "Peak torque\n (N/m)",
