@@ -68,15 +68,15 @@ data %>%
 data %>% 
   pivot_longer(cols = pt.60:ttp.iso,
                names_to = "variable",
-               values_to = "values") %>% # make the dataset into long format
+               values_to = "values") %>% # transform the dataset into long format
   mutate(variable = gsub("pt.", "pt_", variable),
          variable = gsub("ttp.", "ttp_", variable)) %>% # separate variable strings with "_" instead of "."
   pivot_wider(names_from = variable,
-              values_from = values) %>% # pivot back to wide format with the new separator
+              values_from = values) %>% # transform back to wide format with the new separator 
   pivot_longer(cols = pt_60:ttp_iso,
-               names_to = c("variable", "speed"),
-               names_sep = "_",
-               values_to = "value") %>% # use the new separator to split the "variable" into "variable" and "speed" and transform into long format
+               names_to = c("variable", "speed"),  # use the new separator to split the "variable" 
+               names_sep = "_",                    # into "variable" and "speed" and transform into long format
+               values_to = "value") %>%
   pivot_wider(names_from = timepoint,
               values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
   mutate(diff = post - pre) %>% # make a new column named "diff" with differences scores
