@@ -6,10 +6,16 @@ editor_options:
 ---
 
 
-```{r setup, include = FALSE}
+```{r}
+#| label: setup
+#| include: false
+
+# importing required packages (note: you need to install packages prior til loading them if you do not already have them installed)
 library(tidyverse)
 library(readxl)
 library(flextable)
+
+# importing the dataset with changes to the column types
 data <- read_excel("data/humac-data.xlsx") %>% 
   mutate(pt.120 = as.numeric(pt.120),
          ttp.120 = as.numeric(ttp.120),
@@ -35,47 +41,58 @@ data <- read_excel("data/humac-data.xlsx") %>%
 data %>% 
   pivot_longer(cols = pt.60:ttp.iso,
                names_to = "variable",
-               values_to = "values") %>% 
+               values_to = "values") %>% # make the dataset into long format
   mutate(variable = gsub("pt.", "pt_", variable),
-         variable = gsub("ttp.", "ttp_", variable)) %>% 
+         variable = gsub("ttp.", "ttp_", variable)) %>% # separate variable strings with "_" instead of "."
   pivot_wider(names_from = variable,
-              values_from = values) %>%
+              values_from = values) %>% # pivot back to wide format with the new separator
   pivot_longer(cols = pt_60:ttp_iso,
                names_to = c("variable", "speed"),
                names_sep = "_",
-               values_to = "value") %>%
+               values_to = "value") %>% # use the new separator to split the "variable" into "variable" and "speed" and transform into long format
   pivot_wider(names_from = timepoint,
-              values_from = value) %>%
-  mutate(diff = post - pre) %>% 
-  group_by(leg, variable, speed) %>% 
-  summarise(m = mean(c(pre, post), na.rm = T),
-            sd = sd(diff, na.rm = T),
-            te = sd / sqrt(2),
-            cv = 100 * (te / m),
-            L = qt(0.975, 4) * sd) %>%
-  mutate(te_cv =  paste0(signif(te, 2), 
+              values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
+  mutate(diff = post - pre) %>% # make a new column named "diff" with differences scores
+  group_by(leg, variable, speed) %>% # make a grouped dataset based on leg, variable and speed
+  summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
+            sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
+            te = sd / sqrt(2), # calculate the typical error of the diff scores
+            cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
+            L = qt(0.975, 4) * sd) %>% # calculate the limits of agreement for diff scores
+  mutate(te_cv =  paste0(signif(te, 2), # merge te and cv into one cell
                          " (",
                          signif(cv, 2), 
-                         ")"),
+                         "%)"), # merge leg and variable separated with "_"
          leg_var = paste(leg, variable, sep = "_")) %>% 
-  ungroup() %>%
-  select(speed, te_cv, leg_var) %>%
+  ungroup() %>% # ungroup the dataset
+  select(speed, te_cv, leg_var) %>% # select variables of interest
   pivot_wider(names_from = leg_var,
-              values_from = te_cv) %>% 
-  mutate(speed = factor(speed, levels = c("60", "120", "240", "360", "480", "iso"),
-                        labels = c("60 (deg/s)", "120 (deg/s)", "240 (deg/s)", "360 (deg/s)", "480 (deg/s)", "isometric (60 deg)"))) %>% 
-  arrange(speed) %>% 
-  flextable() %>% 
+              values_from = te_cv) %>% # transform the dataset into wide format 
+  mutate(speed = factor(speed, levels = c("60", # make the vector "speed" into a factor and set new levels
+                                          "120", 
+                                          "240", 
+                                          "360", 
+                                          "480", 
+                                          "iso"), 
+                        labels = c("60 (deg/s)", # give the variables more descriptive labels
+                                   "120 (deg/s)", 
+                                   "240 (deg/s)", 
+                                   "360 (deg/s)", 
+                                   "480 (deg/s)", 
+                                   "Isometric (60 deg)"))) %>% 
+  arrange(speed) %>% # arrange the dataset based on the new levels of the "speed" vector
+  flextable() %>% # transform into a flextable to allow further modifications
   set_header_labels(speed = "",
                     L_pt = "Peak torque\n (N/m)",
                     L_ttp = "Time to peak torque\n (seconds)",
                     R_pt = "Peak torque\n (N/m)",
-                    R_ttp = "Time to peak torque\n (seconds)") %>% 
-  add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right Leg")) %>% 
-  merge_at(part = "header", i = 1, j = 2:3) %>% 
-  merge_at(part = "header", i = 1, j = 4:5) %>% 
-  add_footer_row(values = "All values are presented as typical error (coefficient of variation) based on differences from pre- to posttesting", colwidths = 5) %>% 
-  autofit() 
+                    R_ttp = "Time to peak torque\n (seconds)") %>% # rename header labels
+  add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right Leg")) %>% # add a new header row 
+  merge_at(part = "header", i = 1, j = 2:3) %>% # merge left leg together in the new header row
+  merge_at(part = "header", i = 1, j = 4:5) %>% # merge left leg together in the new header row
+  add_footer_row(values = "All values are presented as typical error (coefficient of variation) based on differences from pre- to posttesting", 
+                 colwidths = 5) %>% # add a footnote to describe what the values show
+  autofit() # use autofit() to tidy up the flextable 
   
 ```
 
