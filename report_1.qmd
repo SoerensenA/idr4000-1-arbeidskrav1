@@ -51,7 +51,22 @@ data %>%
   summarise(mean = mean(pre, na.rm = T),
             min = min(pre, na.rm = T),
             max = max(pre, na.rm = T),
-            sd = sd(pre, na.rm = T)) %>% gt()
+            sd = sd(pre, na.rm = T)) %>% 
+  ungroup() %>%
+  separate(Test, into = c("test", "speed")) %>%
+  pivot_wider(names_from = leg, values_from = mean:sd) %>%
+  select(test, speed, mean_L, min_L, max_L, sd_L, 
+         mean_R, min_R, max_R, sd_R) %>%
+  arrange(test) %>%
+  select(-test) %>%
+  
+   gt()  %>%
+  tab_spanner(columns = mean_L:sd_L, label = "Left leg") %>%
+  tab_spanner(columns = mean_R:sd_R, label = "Right leg") %>%
+  tab_row_group(label = "Peak torque", rows = 1:6) %>%
+    tab_row_group(label = "Time to Peak torque", rows = 7:12)
+  
+  
 
 ```
 
@@ -65,18 +80,15 @@ data %>%
 #| warning: false
 #| tbl-cap: "Reliability of knee-extension tests"
 
+
+library(gt)
+
 data %>% 
   pivot_longer(cols = pt.60:ttp.iso,
-               names_to = "variable",
-               values_to = "values") %>% # transform the dataset into long format
-  mutate(variable = gsub("pt.", "pt_", variable),
-         variable = gsub("ttp.", "ttp_", variable)) %>% # separate variable strings with "_" instead of "."
-  pivot_wider(names_from = variable,
-              values_from = values) %>% # transform back to wide format with the new separator 
-  pivot_longer(cols = pt_60:ttp_iso,
-               names_to = c("variable", "speed"),  # use the new separator to split the "variable" 
-               names_sep = "_",                    # into "variable" and "speed" and transform into long format
-               values_to = "value") %>%
+               names_to = c("variable","speed"),
+               values_to = "value", 
+               names_sep = "[.]") %>% # transform the dataset into long format
+
   pivot_wider(names_from = timepoint,
               values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
   mutate(diff = post - pre) %>% # make a new column named "diff" with differences scores
@@ -102,25 +114,28 @@ data %>%
                                           "480", 
                                           "iso"), 
                         labels = c("60 (deg/s)", # give the variables more descriptive labels
-                                   "120 (deg/s)", 
+                                   "120 (deg s<sup>-1</sup>)", 
                                    "240 (deg/s)", 
                                    "360 (deg/s)", 
                                    "480 (deg/s)", 
                                    "Isometric (60 deg)"))) %>% 
-  arrange(speed) %>% # arrange the dataset based on the new levels of the "speed" vector
-  flextable() %>% # transform into a flextable to allow further modifications
-  set_header_labels(speed = "Protocol",
-                    L_pt = "Peak torque\n (N/m)",
-                    L_ttp = "Time to peak torque\n (seconds)",
-                    R_pt = "Peak torque\n (N/m)",
-                    R_ttp = "Time to peak torque\n (seconds)") %>% # rename header labels
-  add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right Leg")) %>% # add a new header row 
-  merge_at(part = "header", i = 1, j = 2:3) %>% # merge left leg together in the new header row
-  merge_at(part = "header", i = 1, j = 4:5) %>% # merge left leg together in the new header row
-  add_footer_row(values = "All values are presented as typical error (coefficient of variation) based on differences from pre- to posttesting", 
-                 colwidths = 5) %>% # add a footnote to describe what the values show
-  autofit() # use autofit() to tidy up the flextable 
+  arrange(speed) %>% # arrange the dataset based on the new levels of the"speed" vector
+
   
+  
+   flextable() %>% # transform into a flextable to allow further modifications
+   set_header_labels(speed = "Protocol",
+                     L_pt = "Peak torque\n (N/m)",
+                     L_ttp = "Time to peak torque\n (seconds)",
+                     R_pt = "Peak torque\n (N/m)",
+                     R_ttp = "Time to peak torque\n (seconds)") %>% # rename # eader labels
+   add_header_row(values = c("", "Left Leg", "Left Leg", "Right Leg", "Right # eg")) %>% # add a new header row 
+   merge_at(part = "header", i = 1, j = 2:3) %>% # merge left leg together in  the new header row
+   merge_at(part = "header", i = 1, j = 4:5) %>% # merge left leg together in  the new header row
+   add_footer_row(values = "All values are presented as typical error # coefficient of variation) based on differences from pre- to posttesting", 
+                  colwidths = 5) %>% # add a footnote to describe what the # alues show
+   autofit() # use autofit() to tidy up the flextable 
+   
 ```
 
 
