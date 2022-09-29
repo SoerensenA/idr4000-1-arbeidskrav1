@@ -146,7 +146,70 @@ data %>%
    
 ```
 
+```{r}
+distribution <- data %>% 
+  pivot_longer(cols = pt.60:ttp.iso,
+               names_to = c("variable","speed"),
+               values_to = "value", 
+               names_sep = "[.]") %>% # transform the dataset into long format
+  pivot_wider(names_from = timepoint,
+              values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
+  rowwise () %>%
+  mutate(diff = post - pre,
+         avg = mean(c(pre, post))) %>% # make a new column named "diff" with differences scores
+  group_by(variable, speed) %>% # make a grouped dataset based on leg, variable and speed
+  summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
+            sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
+            te = sd / sqrt(2), # calculate the typical error of the diff scores
+            cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
+            L = qt(0.975, 4) * sd) %>%  # calculate the limits of agreement for diff scores
+       
+        ggplot(aes(x = diff)) +
+        scale_x_continuous(limits = c(-1000, 1000)) +
+        stat_function(fun = dnorm, 
+                      geom = "area",
+                      args = list(mean = sum_stat$msumdiff, 
+                                               sd = sum_stat$s), 
+                      fill = "steelblue") +
+        
+        theme(axis.text = element_blank(), 
+              axis.title = element_blank(), 
+              axis.ticks = element_blank(), 
+              panel.grid = element_blank()) + 
+        labs(title = "A t-distribution") +
+        coord_flip()
 
 
 
+```
+
+```{r}
+library(blandr)
+library(cowplot)
+bland_altman <- data %>%
+        rowwise() %>%
+  pivot_longer(cols = pt.60:ttp.iso,
+               names_to = c("variable","speed"),
+               values_to = "value", 
+               names_sep = "[.]") %>% # transform the dataset into long format
+   pivot_wider(names_from = timepoint,
+              values_from = value) %>%
+        mutate(diff = post - pre, 
+               avg = mean(c(pre, post))) %>%
+        ggplot(aes(avg, diff)) + 
+        
+        geom_point() +
+        scale_y_continuous(limits = c(-1000, 1000)) +
+        
+        geom_hline(yintercept = sum_stat$mdiff) + 
+        
+        geom_hline(yintercept = sum_stat$mdiff + sum_stat$L) + 
+        geom_hline(yintercept = sum_stat$mdiff - sum_stat$L)  +
+        labs(x = "Average of both measures", 
+             y = "Difference between measurements", 
+             title = "Bland-Altman plot")
+        
+
+plot_grid(bland_altman, distribution, align = "h", nrow = 1, rel_widths = c(1, 0.3))
+```
 
