@@ -5,8 +5,18 @@ editor_options:
   chunk_output_type: console
 ---
 
-#Protokoll 
-##Deltakere
+##Testprotokoll
+Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG -, 2 min på BORG - og 1 min BORG-. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
+
+##Standardisering
+
+###Før test
+
+Deltakere skal ha tilnærmet likt kosthold, søvn og aktivitetsnivå 24 timer før test. Det skal ikke inntas koffein eller nikotin  på testdag. Setet blir stilt inn før første test og de samme innstillingene blir brukt på andre test. Deltaker skal sitte inntil ryggstøtten og med plass til to fingre mellom mellom knehasen og setet på stolen. Rotasjonsaksen i kneleddet skal være parallelt til dreieaksen i dynamometeret. Motstandsarmen blir festet på testbenet ovenfor malleolus. På testbenet blir låret festet med belte og et belte over magen for å forhindre uønskede bevegelser. 
+
+###Under test
+Deltaker får muntlig tilbakemeldinger under gjennomføring. 
+
 
 ```{r}
 #| label: setup
