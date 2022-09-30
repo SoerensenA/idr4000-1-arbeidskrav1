@@ -5,16 +5,16 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Testprotokoll
+##Testprotokoll
 Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG -, 2 min på BORG - og 1 min BORG-. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
 
-## Standardisering
+##Standardisering
 
-### Før test
+###Før test
 
 Deltakere skal ha tilnærmet likt kosthold, søvn og aktivitetsnivå 24 timer før test. Det skal ikke inntas koffein eller nikotin  på testdag. Setet blir stilt inn før første test og de samme innstillingene blir brukt på andre test. Deltaker skal sitte inntil ryggstøtten og med plass til to fingre mellom mellom knehasen og setet på stolen. Rotasjonsaksen i kneleddet skal være parallelt til dreieaksen i dynamometeret. Motstandsarmen blir festet på testbenet ovenfor malleolus. På testbenet blir låret festet med belte og et belte over magen for å forhindre uønskede bevegelser. 
 
-### Under test
+###Under test
 Deltaker får muntlig tilbakemeldinger under gjennomføring. 
 
 
@@ -152,58 +152,31 @@ data %>%
    
 ```
 
-
-
 ```{r}
-#| label: sumstat
-#| echo: false
-#| message: false
-#| warning: false
-
-sum_stat <- data %>%
- pivot_longer(cols = pt.60:ttp.iso,
-               names_to = c("variable","speed"),
-               values_to = "value", 
-               names_sep = "[.]") %>% # transform the dataset into long format
-  pivot_wider(names_from = timepoint,
-              values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
-  mutate(diff = post - pre) %>%
- summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
-            sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
-            te = sd / sqrt(2), # calculate the typical error of the diff scores
-            cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
-            L = qt(0.975, 4) * sd,# calculate the limits of agreement for diff scores
-            mdiff = mean(diff, na.rm = T)) 
-
-```
-
-
-
-
-```{r}
-#| label: tdistribution
-#| echo: false
-#| message: false
-#| warning: false
-
-
 distribution <- data %>% 
-  rowwise () %>%
   pivot_longer(cols = pt.60:ttp.iso,
                names_to = c("variable","speed"),
                values_to = "value", 
                names_sep = "[.]") %>% # transform the dataset into long format
   pivot_wider(names_from = timepoint,
-              values_from = value) %>%
-  mutate(avg = mean(c(pre, post), na.rm = T),
-         diff = post - pre) %>% # make a new column named "diff" with differences scores
-  
+              values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
+  rowwise () %>%
+  mutate(diff = post - pre,
+         avg = mean(c(pre, post))) %>% # make a new column named "diff" with differences scores
+  group_by(variable, speed) %>% # make a grouped dataset based on leg, variable and speed
+  summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
+            sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
+            te = sd / sqrt(2), # calculate the typical error of the diff scores
+            cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
+            L = qt(0.975, 4) * sd,# calculate the limits of agreement for diff scores
+            mdiff = mean(diff))%>%  
+       
         ggplot(aes(x = diff)) +
-        scale_x_continuous(limits = c(-50, 50)) +
+        scale_x_continuous(limits = c(-1000, 1000)) +
         stat_function(fun = dnorm, 
                       geom = "area",
-                      args = list(mean = sum_stat$mdiff, 
-                                               sd = sum_stat$sd), 
+                      args = list(mean = sum_stat$msumdiff, 
+                                               std = sum_stat$sd), 
                       fill = "steelblue") +
         
         theme(axis.text = element_blank(), 
@@ -218,11 +191,6 @@ distribution <- data %>%
 ```
 
 ```{r}
-#| label: BlandAltman
-#| echo: false
-#| message: false
-#| warning: false
-
 library(blandr)
 library(cowplot)
 bland_altman <- data %>%
@@ -234,12 +202,12 @@ bland_altman <- data %>%
    pivot_wider(names_from = timepoint,
               values_from = value) %>%
         mutate(diff = post - pre, 
-               avg = mean(c(pre, post), na.rm = T),
-               mdiff = mean(diff, na.rm = T)) %>%
+               avg = mean(c(pre, post)),
+               mdiff = mean(diff)) %>%
         ggplot(aes(avg, diff)) + 
         
         geom_point() +
-        scale_y_continuous(limits = c(-50, 50)) +
+        scale_y_continuous(limits = c(-1000, 1000)) +
         
         geom_hline(yintercept = sum_stat$mdiff) + 
         
@@ -248,8 +216,7 @@ bland_altman <- data %>%
         labs(x = "Average of both measures", 
              y = "Difference between measurements", 
              title = "Bland-Altman plot")
-
-
+        
 
 plot_grid(bland_altman, distribution, align = "h", nrow = 1, rel_widths = c(1, 0.3))
 ```
