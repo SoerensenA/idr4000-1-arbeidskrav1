@@ -5,16 +5,16 @@ editor_options:
   chunk_output_type: console
 ---
 
-##Testprotokoll
-Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG -, 2 min på BORG - og 1 min BORG-. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
+## Testprotokoll
+Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG - 11, 2 min på BORG - 13 og 1 min BORG - 15. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
 
-##Standardisering
+## Standardisering
 
-###Før test
+### Før test
 
 Deltakere skal ha tilnærmet likt kosthold, søvn og aktivitetsnivå 24 timer før test. Det skal ikke inntas koffein eller nikotin  på testdag. Setet blir stilt inn før første test og de samme innstillingene blir brukt på andre test. Deltaker skal sitte inntil ryggstøtten og med plass til to fingre mellom mellom knehasen og setet på stolen. Rotasjonsaksen i kneleddet skal være parallelt til dreieaksen i dynamometeret. Motstandsarmen blir festet på testbenet ovenfor malleolus. På testbenet blir låret festet med belte og et belte over magen for å forhindre uønskede bevegelser. 
 
-###Under test
+### Under test
 Deltaker får muntlig tilbakemeldinger under gjennomføring. 
 
 
@@ -23,10 +23,13 @@ Deltaker får muntlig tilbakemeldinger under gjennomføring.
 #| include: false
 
 # importing required packages (note: you need to install packages prior til loading them if you do not already have them installed)
+
 library(tidyverse)
 library(readxl)
 library(flextable)
 library(gt)
+library(blandr)
+library(cowplot)
 
 
 # importing the dataset with changes to the column types
@@ -43,8 +46,12 @@ data <- read_excel("data/humac-data.xlsx") %>%
          ttp.iso = as.numeric(ttp.iso))
 ```
 
+## Reslutater
+
+@tbl-desc viser deskriptive data fra testprotokollene ved pretest. Vi ser at det maksimale dreiemomentet og tiden til det maksiamle dreiemomentet avtar med økende hastighet på bevegelsen. Dette stemmer godt overens med sammenhengen mellom kraft og hatighet i Hills-kurve, @fig-hill viser forholdet mellom maksimalt dreiemoment og hastighet i vårt datasett. 
+
 ```{r}
-#| label: tbl-descriptive
+#| label: "tbl-desc"
 #| echo: false
 #| message: false
 #| warning: false
@@ -75,8 +82,8 @@ data %>%
                                    "Isometric (60 deg)"))) %>%
   arrange(speed) %>% 
    gt() %>%
-  tab_spanner(columns = mean_pt:sd_pt, label = "Peak Torque\n (N/m)") %>%
-  tab_spanner(columns = mean_ttp:sd_ttp, label = "Time To Peak Torque\n (seconds)") %>%
+  tab_spanner(columns = mean_pt:sd_pt, label = md("Peak Torque<br> (N/m)")) %>%
+  tab_spanner(columns = mean_ttp:sd_ttp, label = md("Time To Peak Torque<br> (seconds)")) %>%
   fmt_number(columns = mean_pt:sd_pt, decimals = 1) %>%
   fmt_number(columns = mean_ttp:sd_ttp, decimals = 2) %>%
   cols_label(speed = "Protocol",
@@ -87,14 +94,47 @@ data %>%
              mean_ttp = "Mean",
              min_ttp = "Min",
              max_ttp = "Max",
-             sd_ttp = "SD")
-  
-  
+             sd_ttp = "SD") 
 
 ```
 
 ```{r}
-#| label: tbl-reliability
+#| echo: false
+#| message: false
+#| warning: false
+#| label: "fig-hill"
+#| fig-cap: "Speeds effect on peak torque"
+
+
+data %>% 
+  pivot_longer(names_to = "Test",
+               values_to = "values",
+               cols = c(pt.60, pt.120, pt.240,
+               pt.360, pt.480, pt.iso)) %>% 
+  pivot_wider(names_from = timepoint,
+              values_from = values) %>% 
+  group_by(Test) %>%
+  summarise(mean = mean(pre, na.rm = T),
+            s = sd(pre, na.rm = T)) %>% 
+  ungroup() %>%
+  separate(Test, into = c("test", "speed")) %>% 
+  select(-test) %>%
+  mutate(speed = factor(speed, levels = c("iso", "60", "120", "240", "360", "480"), labels = c("0", "60", "120", "240", "360", "480"))) %>% 
+  ggplot(aes(speed, mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - s, ymax = mean + s), width = 0.2) +
+  scale_y_continuous(breaks = seq(0, 350, 50)) +
+  theme_bw() +
+  labs(x = "Speed (deg/s)",
+       y = "Peak Torque (N/m)") +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.minor.y = element_blank())
+```
+
+reliabiliteten til maksimalt dreiemoment og tid til maksimalt dreiemoment over de ulike hastighetene kan sees i @tbl-rel. Den typiske feilen viser hva standardavviket til et individs repeterte målinger er i absolutte tall og variasjonskoeffesienten viser den typiske feilen i prosent av gjennomsnittet. Den typiske feilen ser ut til være ganske lik over de ulike isokinetiske hastighetene, men større på isometrisk ved 60 graders vinkel i kneleddet. Tid til maksimalt dreiemoment ser ut til å følge det samme mønstret. Dette kan skyldes at det ble produsert høyere maksimalt dreiemoment på isometrisk kneekstensjon, se @fig-hill, men også at den isometriske kneekstensjonen ble gjennomført i etterkant av det isokinetiske kneekstensjoner med stigenede hastighet. Dette kan tenkes å føre til større varisjoner i prestasjon ettersom tretthet i muskulaturen kan være til stede og at arbeidsoppgaven endres dratisk. Variasjonskoeffesienten viser at reliabiliteten til maksimalt dreiemoment er mye bedre enn reliabiliteten til tid il maksimalt dreiemoment. Interessant er det at det ser ut til at det finnes en positiv sammenheng mellom variasjonskoeffesient og økende hastighet på isokinetiske løft. Dette indikerer at reliabiliteten er best ved tregere hastigheter. "Limits of agreement" viser til avstanden (to standardavvik) som observasjoner kan variere rundt gjennomsnittet i absolutte tall.  
+
+```{r}
+#| label: "tbl-rel"
 #| echo: false
 #| message: false
 #| warning: false
@@ -106,7 +146,7 @@ data %>%
                names_to = c("variable","speed"),
                values_to = "value", 
                names_sep = "[.]") %>% # transform the dataset into long format
-  pivot_wider(names_from = timepoint,
+  pivot_wider(names_from = timepoint, 
               values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
   mutate(diff = post - pre) %>% # make a new column named "diff" with differences scores
   group_by(variable, speed) %>% # make a grouped dataset based on leg, variable and speed
@@ -135,8 +175,8 @@ data %>%
                                    "Isometric (60 deg)"))) %>%
   arrange(speed) %>%
   gt() %>% 
-  tab_spanner(columns = m_pt:L_pt, label = "Peak Torque\n (N/m)") %>%
-  tab_spanner(columns = m_ttp:L_ttp, label = "Time To Peak Torque\n (seconds)") %>% 
+  tab_spanner(columns = m_pt:L_pt, label = md("Peak Torque<br> (N/m)")) %>%
+  tab_spanner(columns = m_ttp:L_ttp, label = md("Time To Peak Torque<br> (seconds)")) %>% 
   fmt_number(columns = m_pt:L_pt, decimals = 1) %>% 
   fmt_number(columns = m_ttp:L_ttp, decimals = 2) %>% 
   cols_label(speed = "Protocol",
@@ -152,33 +192,56 @@ data %>%
    
 ```
 
+
 ```{r}
-distribution <- data %>% 
-  pivot_longer(cols = pt.60:ttp.iso,
+#| include: false
+#| message: false
+#| warning: false
+
+sum_stat <- data %>% 
+  select(fp:pt.60) %>% 
+  pivot_longer(cols = pt.60,
                names_to = c("variable","speed"),
                values_to = "value", 
-               names_sep = "[.]") %>% # transform the dataset into long format
+               names_sep = "[.]") %>% 
   pivot_wider(names_from = timepoint,
-              values_from = value) %>% # transform the dataset back to wide format for easy calculations of differences from pre to post
-  rowwise () %>%
+              values_from = value) %>% 
+  mutate(diff = post - pre) %>% 
+        summarise(s = sd(diff, na.rm = T),               
+                  mdiff = mean(diff, na.rm = T),         
+                  m = mean(c(pre, post), na.rm = T),        
+                  te = s / sqrt(2),           
+                  cv = 100 * (te / m),        
+                  L = qt(0.975, 99) * s) 
+```
+
+@fig-var viser en Bland-Altman graf for maksimalt dreiemoment ved en hastighet på 60 grader per sekund med tilsvarende t-distribusjon for "error". 
+
+```{r}
+#| label: "fig-var"
+#| fig-cap: "Peak Torque variations at 60 deg/s"
+#| echo: false
+#| warning: false
+#| message: false
+
+distribution <- data %>% 
+  select(fp:pt.60) %>% 
+  pivot_longer(cols = pt.60,
+               names_to = c("variable","speed"),
+               values_to = "value", 
+               names_sep = "[.]") %>% 
+  pivot_wider(names_from = timepoint,
+              values_from = value) %>%
+  rowwise () %>% 
   mutate(diff = post - pre,
-         avg = mean(c(pre, post))) %>% # make a new column named "diff" with differences scores
-  group_by(variable, speed) %>% # make a grouped dataset based on leg, variable and speed
-  summarise(m = mean(c(pre, post), na.rm = T), # calculate the average score from both pre and post testing
-            sd = sd(diff, na.rm = T), # calculate the standard divination of the diff scores 
-            te = sd / sqrt(2), # calculate the typical error of the diff scores
-            cv = 100 * (te / m), # calculate the relative typical error (coefficient of variation)
-            L = qt(0.975, 4) * sd,# calculate the limits of agreement for diff scores
-            mdiff = mean(diff))%>%  
-       
+         avg = mean(c(pre, post))) %>%  
         ggplot(aes(x = diff)) +
-        scale_x_continuous(limits = c(-1000, 1000)) +
+        scale_x_continuous(limits = c(-30, 45)) +
         stat_function(fun = dnorm, 
                       geom = "area",
-                      args = list(mean = sum_stat$msumdiff, 
-                                               std = sum_stat$sd), 
+                      args = list(mean = sum_stat$mdiff, 
+                                               sd = sum_stat$s), 
                       fill = "steelblue") +
-        
         theme(axis.text = element_blank(), 
               axis.title = element_blank(), 
               axis.ticks = element_blank(), 
@@ -188,35 +251,28 @@ distribution <- data %>%
 
 
 
-```
-
-```{r}
-library(blandr)
-library(cowplot)
 bland_altman <- data %>%
-        rowwise() %>%
-  pivot_longer(cols = pt.60:ttp.iso,
+        select(fp:pt.60) %>% 
+        filter(leg == "R") %>%
+        pivot_longer(cols = pt.60,
                names_to = c("variable","speed"),
                values_to = "value", 
-               names_sep = "[.]") %>% # transform the dataset into long format
-   pivot_wider(names_from = timepoint,
+               names_sep = "[.]") %>% 
+        pivot_wider(names_from = timepoint,
               values_from = value) %>%
-        mutate(diff = post - pre, 
-               avg = mean(c(pre, post)),
-               mdiff = mean(diff)) %>%
+        rowwise () %>% 
+        mutate(diff = post - pre,
+         avg = mean(c(pre, post))) %>%
         ggplot(aes(avg, diff)) + 
-        
         geom_point() +
-        scale_y_continuous(limits = c(-1000, 1000)) +
-        
+        scale_y_continuous(limits = c(-30, 45)) +
         geom_hline(yintercept = sum_stat$mdiff) + 
-        
         geom_hline(yintercept = sum_stat$mdiff + sum_stat$L) + 
         geom_hline(yintercept = sum_stat$mdiff - sum_stat$L)  +
         labs(x = "Average of both measures", 
              y = "Difference between measurements", 
              title = "Bland-Altman plot")
-        
+
 
 plot_grid(bland_altman, distribution, align = "h", nrow = 1, rel_widths = c(1, 0.3))
 ```
