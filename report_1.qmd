@@ -6,7 +6,9 @@ editor_options:
 ---
 
 ## Testprotokoll
+
 Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG - 11, 2 min på BORG - 13 og 1 min BORG - 15. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
+
 
 ## Standardisering
 
@@ -212,7 +214,7 @@ sum_stat <- data %>%
                   m = mean(c(pre, post), na.rm = T),        
                   te = s / sqrt(2),           
                   cv = 100 * (te / m),        
-                  L = qt(0.975, 99) * s) 
+                  L = qt(0.975, 4) * s) 
 ```
 
 @fig-var viser en Bland-Altman graf for maksimalt dreiemoment ved en hastighet på 60 grader per sekund med tilsvarende t-distribusjon for "error". 
@@ -248,7 +250,6 @@ distribution <- data %>%
               panel.grid = element_blank()) + 
         labs(title = "A t-distribution") +
         coord_flip()
-
 
 
 bland_altman <- data %>%
