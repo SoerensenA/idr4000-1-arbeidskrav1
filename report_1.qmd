@@ -3,22 +3,22 @@ title: "Reliability of knee-extension tests"
 format: html
 editor_options: 
   chunk_output_type: console
+bibliography: references.bib
 ---
 
 ## Testprotokoll
 
-Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG - 11, 2 min på BORG - 13 og 1 min BORG - 15. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein. 
-
+Deltakeren starter med 7 min oppvarming på sykkel med 4 minutter på BORG - 11, 2 min på BORG - 13 og 1 min BORG - 15. Testen gjøres unilateralt og starter med høgre ben. Deltakeren utfører isokinetisk kneeksentsjon på hastighetene, 60, 120, 240, 360 og 480 grader/sek og avslutter med en isometrisk ekstensjon på en vinkel på 60 grader. Deltakeren har tre førsok på isokinetiske tester og to forsøk på isometrisk hvor den beste gjennomføringen blir gjeldende. Etter gjennomføring blir testen gjentatt på venstre bein.
 
 ## Standardisering
 
 ### Før test
 
-Deltakere skal ha tilnærmet likt kosthold, søvn og aktivitetsnivå 24 timer før test. Det skal ikke inntas koffein eller nikotin  på testdag. Setet blir stilt inn før første test og de samme innstillingene blir brukt på andre test. Deltaker skal sitte inntil ryggstøtten og med plass til to fingre mellom mellom knehasen og setet på stolen. Rotasjonsaksen i kneleddet skal være parallelt til dreieaksen i dynamometeret. Motstandsarmen blir festet på testbenet ovenfor malleolus. På testbenet blir låret festet med belte og et belte over magen for å forhindre uønskede bevegelser. 
+Deltakere skal ha tilnærmet likt kosthold, søvn og aktivitetsnivå 24 timer før test. Det skal ikke inntas koffein eller nikotin på testdag. Setet blir stilt inn før første test og de samme innstillingene blir brukt på andre test. Deltaker skal sitte inntil ryggstøtten og med plass til to fingre mellom mellom knehasen og setet på stolen. Rotasjonsaksen i kneleddet skal være parallelt til dreieaksen i dynamometeret. Motstandsarmen blir festet på testbenet ovenfor malleolus. På testbenet blir låret festet med belte og et belte over magen for å forhindre uønskede bevegelser.
 
 ### Under test
-Deltaker får muntlig tilbakemeldinger under gjennomføring. 
 
+Deltaker får muntlig tilbakemeldinger under gjennomføring.
 
 ```{r}
 #| label: setup
@@ -50,7 +50,7 @@ data <- read_excel("data/humac-data.xlsx") %>%
 
 ## Reslutater
 
-@tbl-desc viser deskriptive data fra testprotokollene ved pretest. Vi ser at det maksimale dreiemomentet og tiden til det maksiamle dreiemomentet avtar med økende hastighet på bevegelsen. Dette stemmer godt overens med sammenhengen mellom kraft og hatighet i Hills-kurve, @fig-hill viser forholdet mellom maksimalt dreiemoment og hastighet i vårt datasett. 
+@tbl-desc viser deskriptive data fra testprotokollene ved pretest. Vi ser at det maksimale dreiemomentet og tiden til det maksiamle dreiemomentet avtar med økende hastighet på bevegelsen. Dette stemmer godt overens med sammenhengen mellom kraft og hatighet i Hills-kurve, @fig-hill viser forholdet mellom maksimalt dreiemoment og hastighet i vårt datasett.
 
 ```{r}
 #| label: "tbl-desc"
@@ -133,7 +133,7 @@ data %>%
         panel.grid.minor.y = element_blank())
 ```
 
-reliabiliteten til maksimalt dreiemoment og tid til maksimalt dreiemoment over de ulike hastighetene kan sees i @tbl-rel. Den typiske feilen viser hva standardavviket til et individs repeterte målinger er i absolutte tall og variasjonskoeffesienten viser den typiske feilen i prosent av gjennomsnittet. Den typiske feilen ser ut til være ganske lik over de ulike isokinetiske hastighetene, men større på isometrisk ved 60 graders vinkel i kneleddet. Tid til maksimalt dreiemoment ser ut til å følge det samme mønstret. Dette kan skyldes at det ble produsert høyere maksimalt dreiemoment på isometrisk kneekstensjon, se @fig-hill, men også at den isometriske kneekstensjonen ble gjennomført i etterkant av det isokinetiske kneekstensjoner med stigenede hastighet. Dette kan tenkes å føre til større varisjoner i prestasjon ettersom tretthet i muskulaturen kan være til stede og at arbeidsoppgaven endres dratisk. Variasjonskoeffesienten viser at reliabiliteten til maksimalt dreiemoment er mye bedre enn reliabiliteten til tid il maksimalt dreiemoment. Interessant er det at det ser ut til at det finnes en positiv sammenheng mellom variasjonskoeffesient og økende hastighet på isokinetiske løft. Dette indikerer at reliabiliteten er best ved tregere hastigheter. "Limits of agreement" viser til avstanden (to standardavvik) som observasjoner kan variere rundt gjennomsnittet i absolutte tall.  
+reliabiliteten til maksimalt dreiemoment og tid til maksimalt dreiemoment over de ulike hastighetene kan sees i @tbl-rel. Den typiske feilen viser hva standardavviket til et individs repeterte målinger er i absolutte tall og variasjonskoeffesienten viser den typiske feilen i prosent av gjennomsnittet. Den typiske feilen ser ut til være ganske lik over de ulike isokinetiske hastighetene, men større på isometrisk ved 60 graders vinkel i kneleddet. Tid til maksimalt dreiemoment ser ut til å følge det samme mønstret. Dette kan skyldes at det ble produsert høyere maksimalt dreiemoment på isometrisk kneekstensjon, se @fig-hill, men også at den isometriske kneekstensjonen ble gjennomført i etterkant av det isokinetiske kneekstensjoner med stigenede hastighet. Dette kan tenkes å føre til større varisjoner i prestasjon ettersom tretthet i muskulaturen kan være til stede og at arbeidsoppgaven endres dratisk. Variasjonskoeffesienten viser at reliabiliteten til maksimalt dreiemoment er mye bedre enn reliabiliteten til tid il maksimalt dreiemoment. Interessant er det at det ser ut til at det finnes en positiv sammenheng mellom variasjonskoeffesient og økende hastighet på isokinetiske løft [@burd2010]. Dette indikerer at reliabiliteten er best ved tregere hastigheter. "Limits of agreement" viser til avstanden (to standardavvik) som observasjoner kan variere rundt gjennomsnittet i absolutte tall @bird2021.
 
 ```{r}
 #| label: "tbl-rel"
@@ -194,7 +194,6 @@ data %>%
    
 ```
 
-
 ```{r}
 #| include: false
 #| message: false
@@ -217,7 +216,7 @@ sum_stat <- data %>%
                   L = qt(0.975, 4) * s) 
 ```
 
-@fig-var viser en Bland-Altman graf for maksimalt dreiemoment ved en hastighet på 60 grader per sekund med tilsvarende t-distribusjon for "error". 
+@fig-var viser en Bland-Altman graf for maksimalt dreiemoment ved en hastighet på 60 grader per sekund med tilsvarende t-distribusjon for "error".
 
 ```{r}
 #| label: "fig-var"
